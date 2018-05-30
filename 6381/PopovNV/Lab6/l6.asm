@@ -142,25 +142,35 @@ CALL_L2 ENDP
 MAIN:
 	mov 	AX,DATA
 	mov		DS, AX
-	push	ES
-	mov 	ES, ES:[2CH]
-	xor 	SI, SI
-	lea 	DI, Path
-Skip: 
-	inc 	SI      
-	cmp 	WORD PTR ES:[SI], 0000H
-	jne 	Skip
-	add 	SI, 4       
+	call 	FREE_MEMORY 
+	call 	CREATE_BLOCK_PARAM
+	mov es, es:[2Ch]
+	mov si, 0
+Env:
+	mov dl, es:[si]
+	cmp dl, 00h
+	je EOL_	
+	inc si
+	jmp Env
+EOL_:
+	inc si
+	mov dl, es:[si]
+	cmp dl, 00h
+	jne Env
+	
+	add si, 03h
+	push di
+	lea di, PATH
 FileName:
-	cmp 	BYTE PTR ES:[SI], 00H
-	je 		EndFN
-	mov 	DL, ES:[SI]
-	mov 	[DI], DL
-	inc 	SI
-	inc 	DI
-	jmp 	FileName   	
+	mov dl, es:[si]
+	cmp dl, 00h
+	je EndFN	
+	mov [di], dl	
+	inc di			
+	inc si			
+	jmp FileName
 EndFN:
-	sub 	DI, 7
+	sub di, 6
 	mov 	[DI], '2L'
 	add 	DI, 2
 	mov 	[DI], 'OM'
@@ -169,16 +179,12 @@ EndFN:
 	add 	DI, 2
 	mov 	[DI], 'OC'
 	add 	DI, 2
-	mov 	BYTE PTR[DI], 'M'
-	inc 	DI
-	mov 	DL, '$'
-	mov 	[DI], DL
-	pop 	ES
-	call 	FREE_MEMORY 
-	call 	CREATE_BLOCK_PARAM
+	mov 	[DI], '$M'
+	add		DI, 2
+	pop 	DI
 	call 	CALL_L2
 	xor 	AL,AL
-	mov 	AH,4Ch ;выход
+	mov 	AH,4Ch
 	int 	21h
 MemSize:
 CODE ENDS
